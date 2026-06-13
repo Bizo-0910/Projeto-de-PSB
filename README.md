@@ -1,6 +1,12 @@
 # Projeto de PSB
 Projeto desenvolvido para a disciplina de Programação de Software Básico com o intuito de simular um jogo de blackjack (vinte-e-um) com Arduino.
 
+## Equipe
+- Ana Beatriz
+- Beatriz Oliveira
+- Gabriel Assis
+- Nadson Sousa
+
 ## Sobre o Blackjack
 Blackjack, às vezes também chamado de vinte-e-um, é um dos mais famosos jogos de carteado em cassinos - e um dos poucos em que há uma chance real de se vencer a banca, através da contagem de cartas -. Seu nome surge da mão mais forte do jogo: um ás e uma carta de valor 10, que, juntas, somam 21 pontos.
 ### Objetivo
