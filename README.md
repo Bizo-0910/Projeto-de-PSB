@@ -20,7 +20,7 @@ Regras mais detalhadas estão no documento "Conceitos iniciais"
 3. 2 resistores 1kohm;
 4. 2 transistores BC337;
 5. 40 _jumpers_;
-6. 2 _displays_ sete segmentos;
+6. 2 _displays_ de sete segmentos;
 7. 3 LEDs
 8. 4 botões e
 9. 2 _protoboards_
