@@ -41,37 +41,36 @@ Regras mais detalhadas estão no documento "Conceitos iniciais"
 ## Guia de uso
 ### Inputs
 
-* **Botão 1 (Hit):** Pede mais uma carta.
-* **Botão 2 (Stand / Espiar):** Encerra o seu turno. *Dica:* Se você segurar este botão durante o seu turno, o display mostrará temporariamente a carta aberta do Dealer.
-* **Botão 3 (Double Down):** Pede apenas mais **uma** carta final e encerra o seu turno automaticamente.
-* **Botão 4 (Reset / Surrender):** Desiste da rodada atual ou reinicia o jogo após o Game Over.
-* **Display:** Mostra a soma atual da sua mão (ou a do Dealer, dependendo da fase do jogo).
+* **Botão 1 (*Hit*):** Pede mais uma carta.
+* **Botão 2 (*Stand* / Espiar):** Encerra o seu turno. *Dica:* Se você segurar este botão durante o seu turno, o display mostrará temporariamente a carta aberta do crupiê.
+* **Botão 3 (*Double Down*):** Pede exatamente **uma** carta e encerra o turno automaticamente.
+* **Botão 4 (*Reset* / *Surrender*):** Desiste da rodada atual ou reinicia o jogo após o acabar.
+* ***Display:*** Mostra a soma atual da sua mão (ou a do crupiê, dependendo da fase do jogo).
 
 ### Estrutura das Rodadas
 
 **1. O Início**
-Assim que o Arduino é ligado, a rodada começa automaticamente. O display numérico exibirá o valor inicial da sua mão. O Dealer (a máquina) também já recebeu as cartas dele, mas a pontuação total dele está oculta.
+Assim que o Arduino é ligado, a rodada começa automaticamente. O display numérico exibirá o valor inicial da sua mão. O crupiê (a máquina) também já recebeu as cartas dele, mas a pontuação total dele está oculta.
 
 **2. Turno do Jogador**
-O objetivo é chegar o mais próximo possível de **21 pontos** sem ultrapassar esse limite.
 
-* Pressione **Hit** para comprar mais cartas. Se a soma das suas cartas passar de 21, você "estoura" (Bust) e perde a rodada instantaneamente.
+* Pressione ***Hit*** para comprar mais cartas. Se a soma das suas cartas passar de 21, você estoura (*Bust*) e perde a rodada instantaneamente.
 * *Nota sobre o Ás:* O sistema calcula o valor do Ás (1 ou 11) de forma automática para evitar que você estoure.
-* Se estiver satisfeito com a sua pontuação, pressione **Stand** para passar a vez.
+* Se estiver satisfeito com a sua pontuação, pressione ***Stand*** para passar a vez.
 
-**3. Turno do Dealer**
+**3. Turno do crupiê**
 Assim que você pressiona *Stand*, o Arduino assume o controle.
 
-* O display passará a mostrar a pontuação do Dealer.
+* O display passará a mostrar a pontuação do crupiê.
 * A máquina jogará sozinha com base em regras fixas de cassino: ela comprará cartas automaticamente (com pequenos intervalos de suspense) até que a pontuação dela seja **maior ou igual a 17**.
 * Se a máquina passar de 21, ela "estoura" e o jogador vence.
 
 **4. Fim de Jogo**
-Quando o Dealer finaliza o turno dele, o sistema compara as pontuações e acende um dos LEDs indicadores:
+Quando o crupiê finaliza o turno dele, o sistema compara as pontuações e acende um dos LEDs indicadores:
 
 * **1 LED aceso:** Vitória.
 * **2 LEDs acesos:** Empate (Push). As pontuações foram iguais.
-* **3 LEDs acesos:** Derrota (O Dealer fez mais pontos, ou você estourou durante o seu turno).
+* **3 LEDs acesos:** Derrota (O crupiê fez mais pontos, ou você estourou durante o seu turno).
 
 **5. Nova Rodada**
 Após o fim do jogo, os botões de ação são desativados. Para iniciar uma nova rodada e limpar o placar, pressione o **Botão 4 (Reset)**. Os LEDs se apagarão e uma nova mão será sorteada.
@@ -85,7 +84,7 @@ Foram selecionados dois displays de 7 segmentos (Cátodo Comum) que compartilham
 Os botões de ação estão ligados às portas analógicas (`A0` a `A3`).
 
 * Utilizamos os resistores do microcontrolador para garantir leituras estáveis (quando não apertados, leem `HIGH`; quando apertados e ligados ao GND, leem `LOW`).
-* O código possui rotinas de atraso para evitar que o ruído do clique do botão registre múltiplas jogadas acidentalmente.
+* O código possui rotinas de atraso para evitar que o ruído do aperto do botão registre múltiplas jogadas acidentalmente.
 
 ### 4. Fluxo do Jogo
 
@@ -93,7 +92,7 @@ O laço principal (`LOOP`) aguarda as decisões do jogador e calcula as pontuaç
 
 1. **Sorteio de Cartas:** O programa possui um contador cíclico que roda a enquanto o jogador não aperta nenhum botão. O milissegundo do clique determina a carta sorteada.
 2. **Turno do Jogador:** O jogador pode pedir carta (*Hit*), dobrar (*Double*), manter (*Stand*) ou resetar (*Surrender*). O código trata automaticamente a regra do Ás (valendo 1 ou 11 para evitar o estouro de 21 pontos).
-3. **Turno do Dealer:** Ao clicar em *Stand*, a máquina assume. Ela revela sua carta oculta e obrigatoriamente compra cartas até atingir um valor mínimo de segurança (17 pontos) ou estourar (Bust).
+3. **Turno do crupiê:** Ao apertar o botão de *Stand*, a máquina assume. Ela revela sua carta oculta e obrigatoriamente compra cartas até atingir um valor mínimo de segurança (17 pontos) ou estourar (Bust).
 4. **Fim de Jogo:** As pontuações são comparadas e um dos 3 LEDs de status é acionado via Porta B (`D11` a `D13`): um led para Vitória, dois leds para Empate (Push) e três leds para Derrota. O sistema então trava em estado de *Game Over* até que o botão de Reset seja pressionado para a próxima rodada.
 
 ## Uso de interrupções e multiplexação
@@ -109,7 +108,7 @@ No bloco `INICIAR`, o **Timer0** nativo do ATmega328P é configurado para atuar 
 * O Timer0 é de 8 bits, ou seja, ele "transborda" (Overflow) ao chegar em 255.
 * **Frequência da Interrupção:** `16.000.000 Hz / (64 * 256) ≈ 976 Hz`.
 
-Isso significa que, de forma totalmente autônoma, o hardware gera um sinal de alerta ~1000 vezes por segundo, interrompendo qualquer coisa que o laço principal (`LOOP`) esteja fazendo.
+Isso significa que, de forma totalmente autônoma, o hardware gera um sinal de alerta cerca de 1000 vezes por segundo, interrompendo qualquer coisa que o laço principal (`LOOP`) esteja fazendo.
 
 ### Context Switch
 
