@@ -1,3 +1,43 @@
+.nolist
+.include "m328Pdef.inc"
+.list
+
+; =========================================================
+; MAPEAMENTO DE HARDWARE
+; =========================================================
+; Entradas: Botões nas Portas Analógicas (Porta C)
+.equ BTN_HIT   = PC0  ; Pino A0 - Pedir carta
+.equ BTN_STAND = PC1  ; Pino A1 - Parar / Vez do Dealer
+.equ BTN_DBL   = PC2  ; Pino A2 - Dobrar a aposta (pede 1 carta e para)
+.equ BTN_RESET = PC3  ; Pino A3 - Reiniciar jogo / Desistir
+
+; Saídas de Controle (Porta B - Pinos 13 a 9)
+.equ TRANS_DEZ = PB5  ; Pino 13 - Aciona o display das dezenas
+.equ TRANS_UNI = PB4  ; Pino 12 - Aciona o display das unidades
+.equ LED_3     = PB3  ; Pino 11 - LED de Vitória
+.equ LED_2     = PB2  ; Pino 10 - LED de Empate
+.equ LED_1     = PB1  ; Pino 9  - LED de Derrota
+
+; Definição de Variáveis nos Registradores
+.def rand          = R25 ; Gerador de números (1 a 13)
+.def carta         = R22 ; Valor da carta comprada na rodada atual
+.def soma          = R16 ; Pontuação total do jogador
+.def dealer_upcard = R23 ; Carta visível do Dealer
+.def dealer_soma   = R18 ; Pontuação total do Dealer
+.def flag_ace_p    = R10 ; Flag que indica se o jogador tem um Ás valendo 11
+.def flag_ace_d    = R11 ; Flag que indica se o Dealer tem um Ás valendo 11
+
+; Registradores da ISR (Interrupt Service Routine - Multiplexação)
+.def padrao_dez    = R6  ; Guarda os bits do 7-seg para a dezena
+.def padrao_uni    = R7  ; Guarda os bits do 7-seg para a unidade
+.def flag_mux      = R8  ; Alterna entre 0 e 1 para trocar o display ativo
+
+.org 0x000
+    RJMP INICIAR ; Vetor de Reset: Pula para a configuração inicial
+
+.org 0x020                 
+    RJMP ISR_TIMER0_OVF  ; Vetor de Interrupção do Timer0 (Ocorre quando o Timer0 transborda) 
+
 ; =========================================================
 ; LOOP PRINCIPAL DO JOGO
 ; =========================================================
