@@ -281,6 +281,114 @@ IA_BUST_TRUE:
     ; Se o Dealer estourou (>21), a rodada acaba (vitória do jogador se não tiver estourado antes)
     RJMP FIM_RODADA
 
+; =========================================================
+; VERIFICAÇÃO DE RESULTADOS E RESET
+; =========================================================
+FIM_RODADA:
+    MOV R21, dealer_soma
+    RCALL ATUALIZA_DISPLAYS
+
+    CPI dealer_soma, 22
+    BRSH GAME_OVER_VITORIA ; Dealer estourou, jogador vence
+
+    ; Compara as somas se ambos sobreviveram
+    CP soma, dealer_soma
+    BREQ GAME_OVER_EMPATE  ; Empate (Push)
+    BRLO GAME_OVER_DERROTA ; Jogador tem menos, Dealer vence
+    RJMP GAME_OVER_VITORIA ; Jogador tem mais, Jogador vence
+
+GAME_OVER_VITORIA:
+    ; Acende todos os LEDs de status
+    SBI PORTB, LED_1
+    SBI PORTB, LED_2
+    SBI PORTB, LED_3
+    RJMP TRAVA_GAME_OVER
+
+GAME_OVER_EMPATE:
+    ; Acende os LEDs 1 e 2
+    SBI PORTB, LED_1
+    SBI PORTB, LED_2
+    RJMP TRAVA_GAME_OVER
+
+GAME_OVER_DERROTA:
+    ; Acende apenas o LED 1
+    SBI PORTB, LED_1
+    RJMP TRAVA_GAME_OVER
+
+TRAVA_GAME_OVER:
+    ; Loop infinito aguardando o jogador apertar RESET para uma nova partida
+    SBIC PINC, BTN_RESET
+    RJMP TRAVA_GAME_OVER
+
+    RCALL ATRASO_DEBOUNCE
+ESPERA_RESET_SOLTAR:
+    SBIS PINC, BTN_RESET
+    RJMP ESPERA_RESET_SOLTAR
+    RCALL ATRASO_DEBOUNCE
+
+    ; Limpa a rodada (apaga LEDs e zera variáveis)
+    CBI PORTB, LED_1
+    CBI PORTB, LED_2
+    CBI PORTB, LED_3
+
+    CLR soma
+    MOV flag_ace_p, R1
+    MOV flag_ace_d, R1
+
+    ; Dá uma nova carta inicial para o Dealer
+    MOV dealer_upcard, rand
+    CPI dealer_upcard, 11
+    BRLO TRATA_AS_RESET
+    LDI dealer_upcard, 10
+    RJMP SET_DEALER_SOMA
+
+TRATA_AS_RESET:
+    CPI dealer_upcard, 1
+    BRNE SET_DEALER_SOMA
+    LDI dealer_upcard, 11
+    LDI R17, 1
+    MOV flag_ace_d, R17
+
+SET_DEALER_SOMA:
+    MOV dealer_soma, dealer_upcard
+
+    MOV R21, soma
+    RCALL ATUALIZA_DISPLAYS
+    RJMP LOOP
+
+; =========================================================
+; DRIVERS DE EXIBIÇÃO REFATORADOS (CONVERSÃO BCD)
+; =========================================================
+; Converte o número hexadecimal (R21) em dois dígitos (Dezena e Unidade)
+ATUALIZA_DISPLAYS:
+    CLR R20               ; R20 será o contador de dezenas
+DIVIDE_POR_10:
+    CPI R21, 10           ; Verifica se o valor é menor que 10
+    BRLO FIM_DIVISAO      ; Se for, o que sobrou é a unidade
+    SUBI R21, 10          ; Subtrai 10 da unidade
+    INC R20               ; Incrementa o contador de dezenas
+    RJMP DIVIDE_POR_10    ; Repete até restar menos de 10
+FIM_DIVISAO:
+    RCALL PREPARA_SEGMENTOS
+    RET
+
+; Busca na tabela (TAB_7SEG) os bytes necessários para acender os displays
+PREPARA_SEGMENTOS:
+    ; Prepara ponteiro Z para buscar a dezena
+    LDI ZL, LOW(TAB_7SEG << 1)
+    LDI ZH, HIGH(TAB_7SEG << 1)
+    ADD ZL, R20
+    CLR R1
+    ADC ZH, R1
+    LPM padrao_dez, Z     ; Carrega o padrão de bits da dezena em padrao_dez
+
+    ; Prepara ponteiro Z para buscar a unidade
+    LDI ZL, LOW(TAB_7SEG << 1)
+    LDI ZH, HIGH(TAB_7SEG << 1)
+    ADD ZL, R21
+    ADC ZH, R1
+    LPM padrao_uni, Z     ; Carrega o padrão de bits da unidade em padrao_uni
+    RET
 
 ; =========================================================
 ; ROTINA DE INTERRUPÇÃO (TIMER0) - MULTIPLEXAÇÃO
