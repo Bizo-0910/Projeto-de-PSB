@@ -39,6 +39,54 @@
     RJMP ISR_TIMER0_OVF  ; Vetor de Interrupção do Timer0 (Ocorre quando o Timer0 transborda) 
 
 ; =========================================================
+; CONFIGURAÇÃO INICIAL (SETUP)
+; =========================================================
+.org 0x030
+INICIAR:
+    ; 1. Configura Porta D (Pinos 0 a 7) como saídas para os segmentos do display
+    LDI R17, 0xFF
+    OUT DDRD, R17
+
+    ; 2. Configura Porta C (A0 a A3) como entradas para os botões
+    LDI R17, 0b00000000
+    OUT DDRC, R17
+    ; Ativa os resistores de Pull-Up internos da Porta C (Garante nível ALTO quando não pressionado)
+    LDI R17, 0b00001111
+    OUT PORTC, R17
+
+    ; 3. Configura Porta B (Pinos 13, 12, 11, 10, 9 como saídas)
+    LDI R17, 0b00111110
+    OUT DDRB, R17
+    ; Garante que todos os transistores e LEDs comecem desligados (nível BAIXO)
+    LDI R17, 0b00000000
+    OUT PORTB, R17
+
+    ; 4. Inicializa variáveis do jogo com zero
+    CLR R1
+    CLR soma
+    MOV flag_ace_p, R1
+    MOV flag_ace_d, R1
+    MOV flag_mux, R1
+    LDI rand, 1 ; Começa o "dado" de cartas em 1
+
+    ; Define a primeira carta do Dealer (fixada em 7 para o início, mas atualizada depois)
+    LDI dealer_upcard, 7
+    MOV dealer_soma, dealer_upcard
+
+    ; 5. Configura o Timer0 para a Multiplexação dos Displays
+    LDI R17, 0x00
+    OUT TCCR0A, R17 ; Modo Normal de operação
+    LDI R17, 0x03
+    OUT TCCR0B, R17 ; Prescaler de 64 (Define a velocidade de transbordo/frequência de atualização)
+    LDI R17, 0x01
+    STS TIMSK0, R17 ; Habilita a interrupção por transbordo (Overflow) do Timer0
+    SEI             ; Habilita interrupções globais (o display começa a piscar aqui)
+
+    ; Prepara o primeiro valor (0) para ser desenhado
+    MOV R21, soma
+    RCALL ATUALIZA_DISPLAYS
+
+; =========================================================
 ; LOOP PRINCIPAL DO JOGO
 ; =========================================================
 LOOP:
